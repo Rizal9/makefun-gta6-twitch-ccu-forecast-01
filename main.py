@@ -164,6 +164,18 @@ def fit_shape(comparables):
     return peers, fits
 
 
+def quantile_sorted(sorted_vals, t):
+    """Linearly interpolated t-quantile of an ascending list."""
+    n = len(sorted_vals)
+    if n == 1:
+        return sorted_vals[0]
+    pos = t * (n - 1)
+    lo = int(math.floor(pos))
+    hi = min(n - 1, lo + 1)
+    frac = pos - lo
+    return sorted_vals[lo] * (1.0 - frac) + sorted_vals[hi] * frac
+
+
 def hour_quantiles(p1, h, fits):
     """Five quantiles of hour h's viewers, given hour-1 print p1."""
     log_p1 = math.log(max(1.0, p1))
@@ -183,7 +195,7 @@ def hour_quantiles(p1, h, fits):
         x_eff, x_dist = log_p1, 0.0
     centre = a + b * x_eff
     n = len(resid)
-    emp = [resid[min(n - 1, int(t * (n - 1)))] for t in LEVELS]
+    emp = [quantile_sorted(resid, t) for t in LEVELS]
     sigma = SIGMA * math.sqrt(h - 1) + EXTRA_SPREAD * min(x_dist, 3.0)
     norm = [z * sigma for z in Z]
     qs = []
